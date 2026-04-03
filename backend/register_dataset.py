@@ -1,9 +1,13 @@
 import os
-from PIL import Image
 
-from model import extract_features
-from database import register_dog
-from cloudinary_utils import upload_image
+try:
+    from .cloudinary_utils import upload_image
+    from .database import register_dog
+    from .model import extract_features_from_url
+except ImportError:
+    from cloudinary_utils import upload_image
+    from database import register_dog
+    from model import extract_features_from_url
 
 
 # -------------------------------
@@ -59,21 +63,25 @@ def register_all():
                     dog_name
                 )
 
-                # Extract features
-                image = Image.open(
-                    image_path
-                )
-
-                features = extract_features(
-                    image
+                features = extract_features_from_url(
+                    image_url
                 )
 
                 if features is not None:
 
                     register_dog(
-                        features,
-                        dog_name,
-                        image_url
+                        {
+                            "name": dog_name,
+                            "image_url": image_url,
+                            "health_status": None,
+                            "rabies_status": None,
+                            "last_seen": None,
+                            "age": None,
+                            "breed": None,
+                            "location": None,
+                            "notes": None,
+                            "features": features,
+                        }
                     )
 
                     print(

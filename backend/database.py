@@ -2,6 +2,7 @@ import os
 import numpy as np
 
 DB_FILE = "dog_db.npy"
+MATCH_THRESHOLD = 0.7
 
 # -------------------------------
 # LOAD DATABASE
@@ -25,30 +26,31 @@ def save_db(db):
 # COSINE SIMILARITY
 # -------------------------------
 def cosine_similarity(a, b):
-    return np.dot(a, b) / (
-        np.linalg.norm(a)
-        * np.linalg.norm(b)
-    )
+    denominator = np.linalg.norm(a) * np.linalg.norm(b)
+    if denominator == 0:
+        return 0.0
+    return float(np.dot(a, b) / denominator)
 
 # -------------------------------
 # REGISTER
 # -------------------------------
-def register_dog(features, dog_name, image_url):
+def register_dog(record):
     db = load_db()
+    dog_name = record["name"]
 
     if dog_name not in db:
         db[dog_name] = []
 
-    db[dog_name].append(
-        {
-            "features": features,
-            "image_url": image_url,
-        }
-    )
+    db[dog_name].append(record)
 
     save_db(db)
 
     return True
+
+
+def get_dog_records(dog_name):
+    db = load_db()
+    return db.get(dog_name, [])
 
 # -------------------------------
 # MATCH
@@ -57,33 +59,24 @@ def match_dog(features):
     db = load_db()
 
     if len(db) == 0:
-        return "No dogs registered", 0, None
+        return None, 0.0
 
-    best_match = None
-    best_score = -1
-    best_image = None
+    best_record = None
+    best_score = -1.0
 
-    for dog_name, feature_list in db.items():
+    for feature_list in db.values():
         for item in feature_list:
-            if isinstance(item, dict):
-                stored_features = item["features"]
-                image_url = item.get("image_url")
-            else:
-                stored_features = item
-                image_url = None
+            if not isinstance(item, dict) or "features" not in item:
+                continue
 
-            score = cosine_similarity(
-                features,
-                stored_features
-            )
+            stored_features = np.asarray(item["features"], dtype=np.float32)
+            score = cosine_similarity(features, stored_features)
 
             if score > best_score:
                 best_score = score
-                best_match = dog_name
-                best_image = image_url
+                best_record = item
 
-    if best_score > 0.65:
-        return best_match, best_score, best_image
+    if best_record is None or best_score < MATCH_THRESHOLD:
+        return None, best_score
 
-    else:
-        return "No match", best_score, None
+    return best_record, best_score
