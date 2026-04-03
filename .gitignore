@@ -1,0 +1,4 @@
+.venv/
+dog_db.npy
+.DS_Store
+Thumbs.db
