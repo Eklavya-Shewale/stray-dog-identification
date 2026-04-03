@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 DB_FILE = "dog_db.npy"
-MATCH_THRESHOLD = 0.7
+MATCH_THRESHOLD = 0.65
 
 # -------------------------------
 # LOAD DATABASE
