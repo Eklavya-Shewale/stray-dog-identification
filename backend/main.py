@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 try:
@@ -11,6 +12,16 @@ except ImportError:
     from model import extract_features_from_bytes, extract_features_from_url
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class DogProfile(BaseModel):
