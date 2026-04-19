@@ -65,6 +65,10 @@ class DogsListResponse(BaseModel):
     dogs: dict[str, list[DogProfile]]
 
 
+def normalize_confidence(score: float) -> float:
+    return min(max(float(score), 0.0), 1.0)
+
+
 @app.post("/register", response_model=RegisterResponse)
 async def register(
     name: str = Form(...),
@@ -219,11 +223,12 @@ async def identify(
         return {
             "status": "unknown",
             "message": "No such dog found in records",
-            "confidence": max(float(score), 0.0),
+            "confidence": normalize_confidence(score),
         }
 
     return {
-        "confidence": float(score),
+        "status": "matched",
+        "confidence": normalize_confidence(score),
         "dog": {
             key: value
             for key, value in matched_record.items()
