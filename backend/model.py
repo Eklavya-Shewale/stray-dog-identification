@@ -22,10 +22,16 @@ transform = transforms.Compose(
 )
 
 
+def preprocess_for_embedding(image: Image.Image) -> torch.Tensor:
+    # Force luminance-only input so embeddings depend on structure/shape cues,
+    # then expand back to 3 channels for MobileNetV2's expected input format.
+    grayscale_image = image.convert("L").convert("RGB")
+    return transform(grayscale_image).unsqueeze(0)
+
+
 def extract_features(image: Image.Image):
     try:
-        img = image.convert("RGB")
-        img = transform(img).unsqueeze(0)
+        img = preprocess_for_embedding(image)
 
         with torch.no_grad():
             feature_map = model.features(img)
